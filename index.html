@@ -25,7 +25,12 @@
         <div class="settings-grid">
           <label class="field compact-field">
             <span>本方机构</span>
-            <input id="bankName" type="text" value="兴业银行" autocomplete="off" />
+            <div id="bankNameEditor" class="stealth-editor">
+              <input id="bankName" type="text" value="兴业银行" autocomplete="off" readonly />
+              <button id="editBankNameButton" class="stealth-edit-button" type="button" title="编辑本方机构" aria-label="编辑本方机构">
+                <i data-lucide="pencil"></i>
+              </button>
+            </div>
           </label>
           <label class="field compact-field">
             <span>谈判日</span>

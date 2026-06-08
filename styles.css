@@ -1,19 +1,19 @@
 :root {
   color-scheme: light;
-  --bg: #f6f7f3;
+  --bg: #f3f4f6;
   --panel: #ffffff;
-  --panel-soft: #fafaf7;
-  --text: #1f2528;
-  --muted: #667078;
-  --line: #d9ded8;
-  --line-strong: #bdc7c1;
-  --accent: #0f766e;
-  --accent-dark: #0b5f58;
-  --accent-soft: #dff4ef;
+  --panel-soft: #f8f8f9;
+  --text: #202329;
+  --muted: #68707c;
+  --line: #d9dce2;
+  --line-strong: #bfc4cd;
+  --accent: #b5523d;
+  --accent-dark: #91402f;
+  --accent-soft: #f8e7e2;
   --warning: #9a5b13;
   --warning-bg: #fff5df;
   --danger: #b42318;
-  --shadow: 0 16px 42px rgba(31, 37, 40, 0.08);
+  --shadow: 0 16px 42px rgba(32, 35, 41, 0.08);
 }
 
 * {
@@ -23,9 +23,7 @@
 body {
   min-width: 320px;
   margin: 0;
-  background:
-    linear-gradient(180deg, rgba(15, 118, 110, 0.08), rgba(255, 255, 255, 0) 340px),
-    var(--bg);
+  background: var(--bg);
   color: var(--text);
   font-family:
     Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
@@ -73,7 +71,7 @@ button:disabled {
   width: 46px;
   height: 46px;
   place-items: center;
-  border: 1px solid rgba(15, 118, 110, 0.24);
+  border: 1px solid rgba(181, 82, 61, 0.26);
   border-radius: 8px;
   background: var(--accent-soft);
   color: var(--accent-dark);
@@ -143,17 +141,98 @@ h3 {
   outline: none;
 }
 
+.stealth-editor {
+  position: relative;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease;
+}
+
+.stealth-editor #bankName {
+  border-color: transparent;
+  background: transparent;
+  padding-right: 38px;
+  cursor: default;
+  transition:
+    background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.stealth-editor:hover,
+.stealth-editor:focus-within {
+  border-color: var(--line);
+  background: var(--panel);
+}
+
+.stealth-editor:hover #bankName,
+.stealth-editor:focus-within #bankName {
+  background: var(--panel);
+}
+
+.stealth-editor.editing {
+  border-color: var(--accent);
+  background: var(--panel);
+  box-shadow: 0 0 0 3px rgba(181, 82, 61, 0.14);
+}
+
+.stealth-editor.editing #bankName {
+  cursor: text;
+}
+
+.stealth-edit-button {
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  transform: translateY(-50%);
+  border: 0;
+  border-left: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    color 140ms ease,
+    opacity 140ms ease;
+}
+
+.stealth-editor:hover .stealth-edit-button,
+.stealth-editor:focus-within .stealth-edit-button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.stealth-edit-button:hover {
+  color: var(--accent-dark);
+}
+
+.stealth-edit-button svg {
+  width: 15px;
+  height: 15px;
+}
+
 .field input:focus,
 textarea:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.13);
+  box-shadow: 0 0 0 3px rgba(181, 82, 61, 0.14);
+}
+
+.stealth-editor #bankName:focus {
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .workspace {
   display: grid;
   grid-template-columns: minmax(340px, 440px) minmax(0, 1fr);
   gap: 16px;
-  align-items: start;
+  align-items: stretch;
+  min-height: calc(100vh - 130px);
 }
 
 .input-panel,
@@ -165,10 +244,14 @@ textarea:focus {
 }
 
 .input-panel {
+  display: flex;
+  flex-direction: column;
   padding: 16px;
 }
 
 .result-panel {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   overflow: hidden;
 }
@@ -242,7 +325,7 @@ textarea:focus {
   padding: 4px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #f2f4f0;
+  background: #f0f1f3;
 }
 
 .switch-button {
@@ -266,11 +349,13 @@ textarea:focus {
 
 .input-pane.active {
   display: grid;
+  flex: 1;
   gap: 10px;
 }
 
 textarea {
   width: 100%;
+  height: 100%;
   min-height: 360px;
   resize: vertical;
   border: 1px solid var(--line);
@@ -297,7 +382,7 @@ textarea {
   min-height: 72px;
   border: 1px dashed var(--line-strong);
   border-radius: 7px;
-  background: #fbfcfa;
+  background: #fafafb;
   padding: 14px;
   cursor: pointer;
 }
@@ -346,15 +431,17 @@ textarea {
 
 .table-wrap {
   position: relative;
-  min-height: 462px;
+  flex: 1;
+  min-height: 0;
   overflow: auto;
 }
 
 table {
-  width: 100%;
-  min-width: 1420px;
+  width: auto;
+  min-width: 100%;
   border-collapse: separate;
   border-spacing: 0;
+  table-layout: fixed;
 }
 
 thead th {
@@ -362,8 +449,8 @@ thead th {
   top: 0;
   z-index: 1;
   border-bottom: 1px solid var(--line-strong);
-  background: #e8f1ee;
-  color: #243130;
+  background: #edf0f4;
+  color: #292e36;
   font-size: 12px;
   font-weight: 720;
   text-align: left;
@@ -378,18 +465,19 @@ td {
 }
 
 th {
-  padding: 10px;
+  padding: 10px 14px 10px 10px;
 }
 
 td input {
   width: 100%;
-  min-width: 86px;
+  min-width: 0;
   height: 38px;
   border: 0;
   background: #fff;
   color: var(--text);
   padding: 8px 10px;
   outline: none;
+  text-overflow: ellipsis;
 }
 
 td input:focus {
@@ -397,8 +485,58 @@ td input:focus {
 }
 
 td input[readonly] {
-  background: #f7f8f5;
+  background: #f6f6f7;
   color: #8a9399;
+}
+
+.resizable-header {
+  position: sticky;
+  user-select: none;
+}
+
+.header-label {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.column-resizer {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  z-index: 3;
+  width: 9px;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.column-resizer::after {
+  position: absolute;
+  top: 8px;
+  right: 4px;
+  bottom: 8px;
+  width: 1px;
+  background: var(--line-strong);
+  content: "";
+  opacity: 0.45;
+}
+
+.resizable-header:hover .column-resizer::after,
+.column-resizer:hover::after {
+  width: 2px;
+  background: var(--accent);
+  opacity: 1;
+}
+
+body.resizing-column,
+body.resizing-column * {
+  cursor: col-resize !important;
+  user-select: none !important;
 }
 
 .empty-state {
@@ -409,7 +547,7 @@ td input[readonly] {
   align-content: center;
   gap: 10px;
   color: var(--muted);
-  background: linear-gradient(180deg, #fff, #fafbf8);
+  background: #fff;
 }
 
 .empty-state svg {
@@ -477,6 +615,12 @@ td input[readonly] {
 
   .workspace {
     grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .input-panel,
+  .result-panel {
+    min-height: 520px;
   }
 
   textarea {

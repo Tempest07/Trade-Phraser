@@ -69,6 +69,28 @@
     结算方式: 12,
   };
 
+  const DEFAULT_TABLE_COLUMN_WIDTHS = {
+    谈判日: 108,
+    交易日: 108,
+    债券代码: 138,
+    债券简称: 184,
+    债券类型: 150,
+    净价: 96,
+    "收益率(%)": 112,
+    估值收益率: 128,
+    我行方向: 100,
+    "面值（万元）": 126,
+    真实交易对手: 190,
+    交易对手: 166,
+    组合: 140,
+    中介: 100,
+    "清算速度(0/1)": 142,
+    成本: 96,
+    价差: 96,
+    清算速度: 116,
+    结算方式: 116,
+  };
+
   const SAMPLE_TEXT = [
     "【中诚】 174D 012580499 25鄂交投SCP001 2.10 3000 03.05+0 兴业银行 出给 天弘基金",
     "【国利】 1) 2.37Y(休2) 245008.SH 26创控K1 1.62 3000 06.03交易所 兴业银行 出给 工银瑞信基金",
@@ -80,6 +102,8 @@
     activeMode: "paste",
     trades: [],
     diagnostics: [],
+    columnWidths: { ...DEFAULT_TABLE_COLUMN_WIDTHS },
+    bankNameBeforeEdit: "",
   };
 
   const $ = (selector) => document.querySelector(selector);
@@ -588,17 +612,117 @@
     return state.activeMode === "paste" ? $("#rawText").value : $("#wordText").value;
   }
 
+  function beginBankNameEdit() {
+    const editor = $("#bankNameEditor");
+    const input = $("#bankName");
+    if (!input.readOnly) return;
+
+    state.bankNameBeforeEdit = input.value;
+    input.readOnly = false;
+    editor.classList.add("editing");
+    input.focus();
+    input.select();
+  }
+
+  function finishBankNameEdit({ cancel = false } = {}) {
+    const editor = $("#bankNameEditor");
+    const input = $("#bankName");
+    if (input.readOnly) return;
+
+    if (cancel) {
+      input.value = state.bankNameBeforeEdit;
+    } else if (!normalizeText(input.value)) {
+      input.value = state.bankNameBeforeEdit || "兴业银行";
+    } else {
+      input.value = normalizeText(input.value);
+    }
+
+    input.readOnly = true;
+    editor.classList.remove("editing");
+  }
+
+  function applyColumnWidths() {
+    const table = $("#resultTable");
+    const columns = table.querySelectorAll("col[data-column]");
+    let totalWidth = 0;
+
+    columns.forEach((column) => {
+      const columnName = column.dataset.column;
+      const width = state.columnWidths[columnName] || 110;
+      column.style.width = `${width}px`;
+      totalWidth += width;
+    });
+
+    table.style.width = `${totalWidth}px`;
+  }
+
+  function startColumnResize(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const handle = event.currentTarget;
+    const columnName = handle.dataset.column;
+    if (!columnName) return;
+
+    const startX = event.clientX;
+    const startWidth = state.columnWidths[columnName] || 110;
+    document.body.classList.add("resizing-column");
+
+    const onPointerMove = (moveEvent) => {
+      const nextWidth = Math.max(72, Math.min(520, startWidth + moveEvent.clientX - startX));
+      state.columnWidths[columnName] = nextWidth;
+      applyColumnWidths();
+    };
+
+    const onPointerUp = () => {
+      document.body.classList.remove("resizing-column");
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerUp);
+    };
+
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerUp);
+  }
+
   function renderTable() {
     const table = $("#resultTable");
     const thead = table.querySelector("thead");
     const tbody = table.querySelector("tbody");
+    let colgroup = table.querySelector("colgroup");
+    if (!colgroup) {
+      colgroup = document.createElement("colgroup");
+      table.insertBefore(colgroup, thead);
+    }
+
+    colgroup.replaceChildren();
     thead.replaceChildren();
     tbody.replaceChildren();
 
     const headerRow = document.createElement("tr");
     EXCEL_COLUMNS.forEach((columnName) => {
+      const col = document.createElement("col");
+      col.dataset.column = columnName;
+      colgroup.appendChild(col);
+
       const th = document.createElement("th");
-      th.textContent = columnName;
+      th.className = "resizable-header";
+      th.title = `${columnName}：拖动右侧边缘调整宽度`;
+
+      const label = document.createElement("span");
+      label.className = "header-label";
+      label.textContent = columnName;
+
+      const resizer = document.createElement("button");
+      resizer.className = "column-resizer";
+      resizer.type = "button";
+      resizer.dataset.column = columnName;
+      resizer.setAttribute("aria-label", `调整${columnName}列宽`);
+      resizer.title = `拖动调整${columnName}列宽`;
+      resizer.addEventListener("pointerdown", startColumnResize);
+
+      th.append(label, resizer);
       headerRow.appendChild(th);
     });
     thead.appendChild(headerRow);
@@ -611,6 +735,7 @@
         input.value = trade[columnName] || "";
         input.dataset.row = String(rowIndex);
         input.dataset.column = columnName;
+        input.title = input.value;
 
         if (FORMULA_COLUMNS.has(columnName)) {
           input.readOnly = true;
@@ -624,6 +749,7 @@
       tbody.appendChild(tr);
     });
 
+    applyColumnWidths();
     $("#emptyState").classList.toggle("hidden", state.trades.length > 0);
   }
 
@@ -741,6 +867,24 @@
   function initDom() {
     $("#negotiationDate").value = formatDate(new Date());
 
+    $("#editBankNameButton").addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+    });
+    $("#editBankNameButton").addEventListener("click", beginBankNameEdit);
+    $("#bankName").addEventListener("dblclick", beginBankNameEdit);
+    $("#bankName").addEventListener("blur", () => finishBankNameEdit());
+    $("#bankName").addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        finishBankNameEdit();
+        $("#bankName").blur();
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        finishBankNameEdit({ cancel: true });
+        $("#bankName").blur();
+      }
+    });
+
     $("#pasteModeButton").addEventListener("click", () => setMode("paste"));
     $("#wordModeButton").addEventListener("click", () => setMode("word"));
     $("#loadExampleButton").addEventListener("click", () => {
@@ -779,6 +923,7 @@
       const column = input.dataset.column;
       if (!Number.isInteger(row) || !column || !state.trades[row]) return;
       state.trades[row][column] = input.value;
+      input.title = input.value;
     });
 
     renderAll();
