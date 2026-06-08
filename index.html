@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>信用债交易记录转换</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+    <script defer src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+    <script defer src="./app.js"></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="topbar" aria-label="页面标题和全局设置">
+        <div class="brand-block">
+          <div class="brand-mark" aria-hidden="true">
+            <i data-lucide="table-2"></i>
+          </div>
+          <div>
+            <h1>信用债交易记录转换</h1>
+            <p>本地解析，导出标准 Excel</p>
+          </div>
+        </div>
+        <div class="settings-grid">
+          <label class="field compact-field">
+            <span>本方机构</span>
+            <input id="bankName" type="text" value="兴业银行" autocomplete="off" />
+          </label>
+          <label class="field compact-field">
+            <span>谈判日</span>
+            <input id="negotiationDate" type="date" />
+          </label>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <aside class="input-panel" aria-label="输入区">
+          <div class="panel-header">
+            <h2>原始记录</h2>
+            <button id="loadExampleButton" class="icon-button ghost" type="button" title="载入示例">
+              <i data-lucide="wand-2"></i>
+              <span>示例</span>
+            </button>
+          </div>
+
+          <div class="input-switch" role="tablist" aria-label="输入方式">
+            <button id="pasteModeButton" class="switch-button active" type="button" role="tab" aria-selected="true">
+              粘贴文本
+            </button>
+            <button id="wordModeButton" class="switch-button" type="button" role="tab" aria-selected="false">
+              上传 Word
+            </button>
+          </div>
+
+          <div id="pastePane" class="input-pane active">
+            <textarea
+              id="rawText"
+              spellcheck="false"
+              placeholder="【中诚】 174D 012580499 25鄂交投SCP001 2.10 3000 03.05+0 兴业银行 出给 天弘基金"
+            ></textarea>
+          </div>
+
+          <div id="wordPane" class="input-pane">
+            <label class="upload-zone" for="wordFile">
+              <i data-lucide="file-input" aria-hidden="true"></i>
+              <span>选择 .docx 文件</span>
+              <strong id="fileName">尚未选择文件</strong>
+            </label>
+            <input id="wordFile" type="file" accept=".docx" />
+            <textarea id="wordText" spellcheck="false" placeholder="Word 文本会显示在这里"></textarea>
+          </div>
+
+          <div class="action-row">
+            <button id="parseButton" class="primary-button" type="button">
+              <i data-lucide="play"></i>
+              <span>开始转换</span>
+            </button>
+            <button id="clearButton" class="secondary-button" type="button">
+              <i data-lucide="eraser"></i>
+              <span>清空</span>
+            </button>
+          </div>
+        </aside>
+
+        <section class="result-panel" aria-label="结果区">
+          <div class="panel-header result-header">
+            <div>
+              <h2>转换结果</h2>
+              <p id="summaryText">等待输入</p>
+            </div>
+            <button id="downloadButton" class="primary-button download-button" type="button" disabled>
+              <i data-lucide="download"></i>
+              <span>下载 Excel</span>
+            </button>
+          </div>
+
+          <div class="table-wrap">
+            <table id="resultTable">
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+            <div id="emptyState" class="empty-state">
+              <i data-lucide="clipboard-list" aria-hidden="true"></i>
+              <p>转换后的交易记录会显示在这里</p>
+            </div>
+          </div>
+
+          <div id="diagnosticPanel" class="diagnostic-panel" hidden>
+            <div class="diagnostic-title">
+              <i data-lucide="circle-alert" aria-hidden="true"></i>
+              <h3>需要复核的行</h3>
+            </div>
+            <div id="diagnosticList" class="diagnostic-list"></div>
+          </div>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>
