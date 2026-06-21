@@ -550,6 +550,70 @@
     return "";
   }
 
+  function clipboardFormulaForColumn(columnName) {
+    if (columnName === "债券简称") return `=@B_INFO_NAME(INDIRECT("RC[-1]",FALSE))`;
+    if (columnName === "债券类型") return `=B_INFO_WINDL2TYPE(INDIRECT("RC[-2]",FALSE))`;
+    if (columnName === "估值收益率") {
+      return `=@IF(@B_ANAL_YIELD_CNBD(INDIRECT("RC[-5]",FALSE),INDIRECT("RC[-7]",FALSE)-1,1)=0,"-",B_ANAL_YIELD_CNBD(INDIRECT("RC[-5]",FALSE),INDIRECT("RC[-7]",FALSE)-1,1))`;
+    }
+    return "";
+  }
+
+  function normalizeClipboardCell(value) {
+    return String(value ?? "").replace(/[\t\r\n]+/g, " ").trim();
+  }
+
+  function buildExcelClipboardText(trades) {
+    return trades
+      .map((trade) =>
+        EXCEL_COLUMNS.map((columnName) => {
+          if (FORMULA_COLUMNS.has(columnName)) return clipboardFormulaForColumn(columnName);
+          return normalizeClipboardCell(trade[columnName]);
+        }).join("\t"),
+      )
+      .join("\n");
+  }
+
+  function setClipboardTextFromEvent(event, text) {
+    if (!event?.clipboardData) return false;
+    event.clipboardData.setData("text/plain", text);
+    event.clipboardData.setData("text/tab-separated-values", text);
+    event.preventDefault();
+    return true;
+  }
+
+  function copyTextFallback(text) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    textarea.style.top = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length);
+    const ok = document.execCommand("copy");
+    textarea.remove();
+    if (!ok) throw new Error("浏览器拒绝写入剪贴板");
+  }
+
+  async function writeClipboardText(text, event = null) {
+    if (setClipboardTextFromEvent(event, text)) return;
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+    copyTextFallback(text);
+  }
+
+  function hasActiveTextSelection() {
+    const active = document.activeElement;
+    if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) {
+      return active.selectionStart !== active.selectionEnd;
+    }
+    return !window.getSelection?.().isCollapsed;
+  }
+
   function createWorkbook(trades) {
     if (typeof XLSX === "undefined") {
       throw new Error("Excel 导出库没有加载完成，请刷新页面后重试。");
@@ -779,12 +843,13 @@
     if (!count) {
       $("#summaryText").textContent = "等待输入";
     } else if (warningCount) {
-      $("#summaryText").textContent = `已转换 ${count} 行，${warningCount} 行需要复核`;
+      $("#summaryText").textContent = `已转换 ${count} 行，${warningCount} 行需要复核；点击表格后 Ctrl+C 可粘贴到 Excel`;
     } else {
-      $("#summaryText").textContent = `已转换 ${count} 行`;
+      $("#summaryText").textContent = `已转换 ${count} 行；点击表格后 Ctrl+C 可粘贴到 Excel`;
     }
 
     $("#downloadButton").disabled = count === 0;
+    $("#copyExcelButton").disabled = count === 0;
   }
 
   function renderAll() {
@@ -854,6 +919,43 @@
     }
   }
 
+  async function copyExcelTable(event = null) {
+    if (!state.trades.length) return;
+    const button = $("#copyExcelButton");
+    const originalHtml = button.innerHTML;
+    const text = buildExcelClipboardText(state.trades);
+
+    try {
+      await writeClipboardText(text, event);
+      button.innerHTML = '<i data-lucide="check"></i><span>已复制</span>';
+      $("#summaryText").textContent = `已复制 ${state.trades.length} 行，可直接粘贴到 Excel`;
+      if (window.lucide) window.lucide.createIcons();
+      window.setTimeout(() => {
+        button.innerHTML = originalHtml;
+        updateSummary();
+        if (window.lucide) window.lucide.createIcons();
+      }, 1800);
+    } catch (error) {
+      state.diagnostics = [
+        {
+          lineNumber: 0,
+          original: "",
+          message: error.message || "复制失败，请检查浏览器剪贴板权限",
+        },
+      ];
+      renderDiagnostics();
+      updateSummary();
+    }
+  }
+
+  function copyExcelTableFromShortcut(event) {
+    if (!state.trades.length) return;
+    if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== "c") return;
+    if (hasActiveTextSelection()) return;
+    event.preventDefault();
+    copyExcelTable(event);
+  }
+
   function clearAll() {
     $("#rawText").value = "";
     $("#wordText").value = "";
@@ -894,7 +996,17 @@
     });
     $("#parseButton").addEventListener("click", parseCurrentInput);
     $("#clearButton").addEventListener("click", clearAll);
+    $("#copyExcelButton").addEventListener("click", copyExcelTable);
     $("#downloadButton").addEventListener("click", downloadExcel);
+    const resultTableWrap = $("#resultTableWrap");
+    resultTableWrap.addEventListener("pointerdown", (event) => {
+      if (event.target.closest("input, button, textarea, select")) return;
+      resultTableWrap.focus({ preventScroll: true });
+    });
+    resultTableWrap.addEventListener("keydown", copyExcelTableFromShortcut);
+    resultTableWrap.addEventListener("copy", (event) => {
+      if (!hasActiveTextSelection()) copyExcelTable(event);
+    });
 
     $("#wordFile").addEventListener("change", async (event) => {
       const file = event.target.files && event.target.files[0];
@@ -935,6 +1047,7 @@
     parseTradeLine,
     normalizeText,
     createWorkbook,
+    buildExcelClipboardText,
   };
 
   if (typeof window !== "undefined") {

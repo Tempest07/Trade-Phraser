@@ -270,6 +270,14 @@ textarea:focus {
   background: var(--panel-soft);
 }
 
+.result-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .icon-button,
 .primary-button,
 .secondary-button {
@@ -429,11 +437,20 @@ textarea {
   min-width: 136px;
 }
 
+.copy-button {
+  min-width: 136px;
+}
+
 .table-wrap {
   position: relative;
   flex: 1;
   min-height: 0;
   overflow: auto;
+  outline: none;
+}
+
+.table-wrap:focus-visible {
+  box-shadow: inset 0 0 0 3px rgba(181, 82, 61, 0.14);
 }
 
 table {
@@ -638,7 +655,9 @@ body.resizing-column * {
     display: grid;
   }
 
-  .download-button {
+  .result-actions,
+  .download-button,
+  .copy-button {
     width: 100%;
   }
 

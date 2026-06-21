@@ -94,13 +94,19 @@
               <h2>转换结果</h2>
               <p id="summaryText">等待输入</p>
             </div>
-            <button id="downloadButton" class="primary-button download-button" type="button" disabled>
-              <i data-lucide="download"></i>
-              <span>下载 Excel</span>
-            </button>
+            <div class="result-actions">
+              <button id="copyExcelButton" class="secondary-button copy-button" type="button" title="复制数据行，不含表头；公式列会保留公式" disabled>
+                <i data-lucide="copy"></i>
+                <span>复制到 Excel</span>
+              </button>
+              <button id="downloadButton" class="primary-button download-button" type="button" disabled>
+                <i data-lucide="download"></i>
+                <span>下载 Excel</span>
+              </button>
+            </div>
           </div>
 
-          <div class="table-wrap">
+          <div id="resultTableWrap" class="table-wrap" tabindex="0" aria-label="转换结果表格，按 Ctrl+C 可复制为 Excel 粘贴格式">
             <table id="resultTable">
               <thead></thead>
               <tbody></tbody>
