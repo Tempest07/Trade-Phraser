@@ -3,23 +3,24 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f4f6fb" />
     <title>信用债交易记录转换</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=20260714-visual2" />
     <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
     <script defer src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
-    <script defer src="./app.js"></script>
+    <script defer src="./app.js?v=20260714-visual2"></script>
   </head>
   <body>
-    <main class="app-shell">
+    <main class="app-shell" data-mobile-pane="input">
       <section class="topbar" aria-label="页面标题和全局设置">
         <div class="brand-block">
           <div class="brand-mark" aria-hidden="true">
             <i data-lucide="table-2"></i>
           </div>
-          <div>
+          <div class="brand-copy">
+            <span class="brand-tag">TRADE</span>
             <h1>信用债交易记录转换</h1>
-            <p>本地解析，导出标准 Excel</p>
           </div>
         </div>
         <div class="settings-grid">
@@ -42,7 +43,10 @@
       <section class="workspace">
         <aside class="input-panel" aria-label="输入区">
           <div class="panel-header">
-            <h2>原始记录</h2>
+            <div class="panel-title">
+              <span class="panel-code">INPUT</span>
+              <h2>原始记录</h2>
+            </div>
             <button id="loadExampleButton" class="icon-button ghost" type="button" title="载入示例">
               <i data-lucide="wand-2"></i>
               <span>示例</span>
@@ -90,9 +94,12 @@
 
         <section class="result-panel" aria-label="结果区">
           <div class="panel-header result-header">
-            <div>
-              <h2>转换结果</h2>
-              <p id="summaryText">等待输入</p>
+            <div class="result-title">
+              <div class="panel-title">
+                <span class="panel-code">OUTPUT</span>
+                <h2>转换结果</h2>
+              </div>
+              <p id="summaryText" aria-live="polite">等待输入</p>
             </div>
             <div class="result-actions">
               <button id="copyExcelButton" class="secondary-button copy-button" type="button" title="复制数据行，不含表头；公式列会保留公式" disabled>
@@ -126,6 +133,17 @@
           </div>
         </section>
       </section>
+
+      <nav id="mobileWorkspaceNav" class="mobile-workspace-nav" aria-label="转换工作区">
+        <button class="mobile-workspace-button active" type="button" data-mobile-workspace-pane="input" aria-pressed="true">
+          <i data-lucide="file-input" aria-hidden="true"></i>
+          <span>输入</span>
+        </button>
+        <button class="mobile-workspace-button" type="button" data-mobile-workspace-pane="result" aria-pressed="false">
+          <i data-lucide="table-2" aria-hidden="true"></i>
+          <span>结果</span>
+        </button>
+      </nav>
     </main>
   </body>
 </html>

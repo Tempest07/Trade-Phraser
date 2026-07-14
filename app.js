@@ -672,6 +672,24 @@
     $("#wordPane").classList.toggle("active", mode === "word");
   }
 
+  function setMobileWorkspacePane(pane, { reveal = false } = {}) {
+    const nextPane = pane === "result" ? "result" : "input";
+    const shell = $(".app-shell");
+    shell.dataset.mobilePane = nextPane;
+    document.querySelectorAll('[data-mobile-workspace-pane]').forEach((button) => {
+      const active = button.dataset.mobileWorkspacePane === nextPane;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+
+    if (!reveal || !window.matchMedia("(max-width: 680px)").matches) return;
+    const target = nextPane === "result" ? $(".result-panel") : $(".input-panel");
+    target?.scrollIntoView({
+      block: "start",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+    });
+  }
+
   function activeRawText() {
     return state.activeMode === "paste" ? $("#rawText").value : $("#wordText").value;
   }
@@ -890,6 +908,7 @@
         },
       ];
       renderAll();
+      setMobileWorkspacePane("result", { reveal: true });
       return;
     }
 
@@ -899,6 +918,7 @@
     state.trades = result.trades;
     state.diagnostics = result.diagnostics;
     renderAll();
+    setMobileWorkspacePane("result", { reveal: true });
   }
 
   function downloadExcel() {
@@ -964,6 +984,7 @@
     state.trades = [];
     state.diagnostics = [];
     renderAll();
+    setMobileWorkspacePane("input", { reveal: true });
   }
 
   function initDom() {
@@ -989,6 +1010,9 @@
 
     $("#pasteModeButton").addEventListener("click", () => setMode("paste"));
     $("#wordModeButton").addEventListener("click", () => setMode("word"));
+    document.querySelectorAll('[data-mobile-workspace-pane]').forEach((button) => {
+      button.addEventListener("click", () => setMobileWorkspacePane(button.dataset.mobileWorkspacePane, { reveal: true }));
+    });
     $("#loadExampleButton").addEventListener("click", () => {
       setMode("paste");
       $("#rawText").value = SAMPLE_TEXT;
