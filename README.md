@@ -7,6 +7,8 @@
 - `index.html`：页面入口
 - `styles.css`：页面样式
 - `app.js`：解析、表格编辑、Excel 导出逻辑
+- `date-picker.js`：与 Bond Centre 共用的日期选择逻辑
+- `date-picker-init.js`：初始化页面日期输入
 
 ## Cloudflare Pages 直接上传
 
